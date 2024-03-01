@@ -1361,10 +1361,10 @@
     marker-fill: @airtransport;
   }
 
-  [feature = 'aeroway_aerodrome']['int_access' = 'yes']['icao' != null]['iata' != null][zoom >= 10][zoom < 17],
-  [feature = 'aeroway_aerodrome']['int_access' = 'restricted'][zoom >= 12][zoom < 18],
-  [feature = 'aeroway_aerodrome']['icao' = null][zoom >= 12][zoom < 18],
-  [feature = 'aeroway_aerodrome']['iata' = null][zoom >= 12][zoom < 18] {
+  [feature = 'aeroway_aerodrome'][int_access = 'yes'][icao != null][iata != null][zoom >= 10][zoom < 17],
+  [feature = 'aeroway_aerodrome'][int_access = 'restricted'][zoom >= 12][zoom < 18],
+  [feature = 'aeroway_aerodrome'][icao = null][zoom >= 12][zoom < 18],
+  [feature = 'aeroway_aerodrome'][iata = null][zoom >= 12][zoom < 18] {
     [way_pixels <= 192000],
     [way_pixels = null] {
       marker-file: url('symbols/amenity/aerodrome.svg');
@@ -1437,7 +1437,7 @@
     marker-clip: false;
   }
 
-  [feature = 'power_generator']['generator:source' = 'wind'] {
+  [feature = 'power_generator']["generator:source" = 'wind'] {
     [zoom >= 15][location != 'rooftop'][location != 'roof'],
     [zoom >= 15][location = null],
     [zoom >= 19] {
@@ -1509,15 +1509,21 @@
     marker-file: url('symbols/barrier/level_crossing.svg');
     marker-fill: #4d4d4d;
     marker-clip: false;
+    marker-width: 7;
+    marker-height: 7;
     [zoom >= 16] {
       marker-file: url('symbols/barrier/level_crossing2.svg');
+      marker-width: 11;
+      marker-height: 11;
     }
   }
 
   [feature = 'barrier_gate']::barrier {
     [zoom >= 17] {
-      marker-file: url('symbols/barrier/gate.svg');
+      marker-file: url('symbols/barrier/gate2.svg');
       marker-clip: false;
+      marker-width: 6;
+      marker-height: 5;
     }
   }
 
@@ -1914,9 +1920,9 @@
     }
   }
 
-  [feature = 'power_generator']['generator:source' = 'wind'][location != 'rooftop'][location != 'roof'][zoom >= 17],
-  [feature = 'power_generator']['generator:source' = 'wind'][location = null][zoom >= 17],
-  [feature = 'power_generator']['generator:source' = 'wind'][zoom >= 19],
+  [feature = 'power_generator']["generator:source" = 'wind'][location != 'rooftop'][location != 'roof'][zoom >= 17],
+  [feature = 'power_generator']["generator:source" = 'wind'][location = null][zoom >= 17],
+  [feature = 'power_generator']["generator:source" = 'wind'][zoom >= 19],
   [feature = 'historic_city_gate'][zoom >= 17],
   [feature = 'natural_cave_entrance'][zoom >= 15],
   [feature = 'man_made_mast'][zoom >= 18],
@@ -1935,7 +1941,7 @@
     text-wrap-width: @standard-wrap-width;
     text-line-spacing: @standard-line-spacing-size;
     text-fill: darken(@man-made-icon, 20%);
-    [feature = 'power_generator']['generator:source' = 'wind'],
+    [feature = 'power_generator']["generator:source" = 'wind'],
     [feature = 'historic_city_gate'],
     [feature = 'man_made_mast'],
     [feature = 'man_made_tower'],
@@ -2862,10 +2868,10 @@
     text-halo-fill: @standard-halo-fill;
   }
 
-  [feature = 'aeroway_aerodrome']['int_access' = 'yes']['icao' != null]['iata' != null][zoom >= 11][zoom < 17],
-  [feature = 'aeroway_aerodrome']['int_access' = 'restricted'][zoom >= 13][zoom < 18],
-  [feature = 'aeroway_aerodrome']['icao' = null][zoom >= 13][zoom < 18],
-  [feature = 'aeroway_aerodrome']['iata' = null][zoom >= 13][zoom < 18] {
+  [feature = 'aeroway_aerodrome'][int_access = 'yes'][icao != null][iata != null][zoom >= 11][zoom < 17],
+  [feature = 'aeroway_aerodrome'][int_access = 'restricted'][zoom >= 13][zoom < 18],
+  [feature = 'aeroway_aerodrome'][icao = null][zoom >= 13][zoom < 18],
+  [feature = 'aeroway_aerodrome'][iata = null][zoom >= 13][zoom < 18] {
     [way_pixels <= 192000],
     [way_pixels = null] {
       text-name: "[name]";
@@ -3075,26 +3081,9 @@
   }
 }
 
-#trees [zoom >= 16] {
+#trees-1 [zoom >= 16] {
   ::canopy {
     opacity: 0.6;
-    [natural = 'tree_row'] {
-      line-color: darken(@forest,10%);
-      line-cap: round;
-      line-width: 2.5;
-      [zoom >= 17] {
-        line-width: 5;
-      }
-      [zoom >= 18] {
-        line-width: 10;
-      }
-      [zoom >= 19] {
-        line-width: 15;
-      }
-      [zoom >= 20] {
-        line-width: 30;
-      }
-    }
     [natural = 'tree'] {
       marker-fill: darken(@forest,10%);
       marker-allow-overlap: true;
@@ -3137,6 +3126,29 @@
     [zoom >= 20] {
       trunk/marker-width: 6;
       trunk/marker-height: 6;
+    }
+  }
+}
+
+#trees-2 [zoom >= 16] {
+  ::canopy {
+    opacity: 0.6;
+    [natural = 'tree_row'] {
+      line-color: darken(@forest,10%);
+      line-cap: round;
+      line-width: 2.5;
+      [zoom >= 17] {
+        line-width: 5;
+      }
+      [zoom >= 18] {
+        line-width: 10;
+      }
+      [zoom >= 19] {
+        line-width: 15;
+      }
+      [zoom >= 20] {
+        line-width: 30;
+      }
     }
   }
 }

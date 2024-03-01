@@ -116,7 +116,8 @@ A regular style.
                 "Noto Sans Tifinagh Regular",
                 "Noto Sans Vai Regular",
                 "Noto Sans Yi Regular",
-                "Noto Sans CJK JP Regular",
+                "Noto Sans CJK JP Hangul Regular",
+                "Noto Sans CJK JP Ideographs Regular",
                 
                 "Noto Serif Tibetan Regular",
                 "Noto Emoji Regular",
@@ -162,7 +163,8 @@ regular text and can be used for emphasis. Fallback is a regular style.
                 "Noto Sans Telugu UI Bold",
                 "Noto Sans Thaana Bold",
                 "Noto Sans Thai UI Bold",
-                "Noto Sans CJK JP Bold",
+                "Noto Sans CJK JP Hangul Bold",
+                "Noto Sans CJK JP Ideographs Bold",
 
                 "Noto Serif Tibetan Bold",
                 "Noto Emoji Bold",

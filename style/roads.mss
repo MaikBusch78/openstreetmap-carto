@@ -54,7 +54,7 @@
 @private-marking: #efa9a9;
 @private-marking-for-red: #C26363;
 
-@tunnel-casing: grey;
+@tunnel-casing: gray;
 @bridge-casing: black;
 
 @motorway-tunnel-fill: lighten(@motorway-fill, 10%);
@@ -807,7 +807,7 @@
     }
 
     [feature = 'railway_subway'],
-    [feature = 'railway_construction']['construction' = 'subway'] {
+    [feature = 'railway_construction']["construction" = 'subway'] {
       #bridges {
         [zoom >= 14] {
           line-width: 5.5;
@@ -852,7 +852,7 @@
     }
 
     [feature = 'railway_disused'][zoom >= 15],
-    [feature = 'railway_construction']['construction' != 'subway'],
+    [feature = 'railway_construction']["construction" != 'subway'],
     [feature = 'railway_miniature'][zoom >= 15],
     [feature = 'railway_INT-preserved-ssy'][zoom >= 14] {
       #bridges {
@@ -1045,7 +1045,7 @@
     }
 
     [feature = 'railway_disused'][zoom >= 15],
-    [feature = 'railway_construction']['construction' != 'subway'],
+    [feature = 'railway_construction']["construction" != 'subway'],
     [feature = 'railway_miniature'][zoom >= 15],
     [feature = 'railway_INT-preserved-ssy'][zoom >= 14] {
       #bridges {
@@ -1071,7 +1071,7 @@
     }
 
     [feature = 'railway_subway'],
-    [feature = 'railway_construction']['construction' = 'subway'] {
+    [feature = 'railway_construction']["construction" = 'subway'] {
       #bridges {
         [zoom >= 14] {
           line-width: 4;
@@ -2233,7 +2233,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
       [zoom >= 16] {
         line-join: round;
         line-width: 6;
-        line-color: grey;
+        line-color: gray;
         line-cap: round;
         b/line-width: 4;
         b/line-color: @platform-fill;
@@ -2246,7 +2246,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
       [zoom >= 16] {
         line-join: round;
         line-width: 6;
-        line-color: grey;
+        line-color: gray;
         line-cap: round;
         b/line-pattern-width: 4;
         b/line-pattern-type: repeat;
@@ -2535,7 +2535,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
         [zoom >= 8] { line-width: 0.8; }
         [zoom >= 12] { line-width: 0.9; }
         line-join: round;
-        .roads_low_zoom[int_tunnel = 'yes'], #tunnels {
+        #roads_low_zoom[int_tunnel = 'yes'], #tunnels {
           line-dasharray: 5,2;
         }
       }
@@ -2719,7 +2719,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
 
     [feature = 'railway_construction'] {
       [zoom >= 13] {
-        line-color: grey;
+        line-color: gray;
         line-width: 2;
         line-dasharray: 2,4;
         line-join: round;
@@ -2746,7 +2746,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
       [zoom >= 16] {
         line-join: round;
         line-width: 6;
-        line-color: grey;
+        line-color: gray;
         line-cap: round;
         b/line-width: 4;
         b/line-color: @platform-fill;
@@ -2759,7 +2759,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
       [zoom >= 16] {
         line-join: round;
         line-width: 6;
-        line-color: grey;
+        line-color: gray;
         line-cap: round;
         b/line-pattern-width: 4;
         b/line-pattern-type: repeat;
@@ -3167,7 +3167,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
     marker-line-width: 0;
   }
 
-  [type = 'mini_roundabout']::circle {
+  [int_tc_type = 'mini_roundabout']::circle {
     marker-width: @mini-roundabout-width;
     marker-allow-overlap: true;
     marker-ignore-placement: true;
@@ -3196,7 +3196,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
   [feature = 'highway_footway'],
   [feature = 'highway_pedestrian'] {
     [zoom >= 15] {
-      line-color: grey;
+      line-color: gray;
       line-width: 1;
     }
   }
@@ -3204,7 +3204,7 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
   [feature = 'highway_platform'],
   [feature = 'railway_platform'] {
     [zoom >= 16] {
-      line-color: grey;
+      line-color: gray;
       line-width: 2;
       line-cap: round;
       line-join: round;
@@ -3375,9 +3375,9 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
   }
 }
 
-#tunnels::fill,
-#roads-fill::fill,
-#bridges::fill {
+#tunnels-access::fill,
+#roads-fill-access::fill,
+#bridges-access::fill {
   [access = 'destination'] {
     [feature = 'highway_secondary'],
     [feature = 'highway_tertiary'],
