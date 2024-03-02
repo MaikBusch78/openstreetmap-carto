@@ -55,6 +55,7 @@ Stylesheet:
   - style/addressing.mss
   - style/golf.mss
   - style/tourism.mss
+
 Layer:
   - id: landcover-low-zoom
     geometry: polygon
@@ -64,6 +65,7 @@ Layer:
       table: |-
         (SELECT
             way, way_pixels,
+            NULL::text AS is_building,
             COALESCE(wetland, landuse, "natural") AS feature
           FROM (SELECT
               way,
@@ -237,6 +239,7 @@ Layer:
       cache-features: true
       minzoom: 0
   - id: ocean-lz
+    ignore: true
     geometry: polygon
     <<: *extents
     Datasource:
@@ -256,7 +259,7 @@ Layer:
       file: water-polygons-split-3857/water_polygons.shp
       table: (SELECT way, shapefile FROM planet_osm_polygon WHERE shapefile = 'water_polygons.shp') AS water_polygons
     properties:
-      minzoom: 10
+      minzoom: 0
   - id: landcover-area-symbols
     geometry: polygon
     <<: *extents
@@ -430,7 +433,7 @@ Layer:
       <<: *osm2pgsql
       # This query is quite large, having to deal with both roads, railways. To
       # allow for ways that are both railways and roads, a UNION ALL is present.
-      table: |-
+      table: &tunnels-sql |-
         (SELECT
             way,
             (CASE WHEN feature IN ('highway_motorway_link', 'highway_trunk_link', 'highway_primary_link', 'highway_secondary_link', 'highway_tertiary_link') THEN substr(feature, '_link') ELSE feature END) AS feature,
@@ -485,7 +488,7 @@ Layer:
                 foot,
                 bicycle,
                 tracktype,
-                'null',
+                'null' AS int_surface,
                 CASE
                   WHEN access IN ('destination') THEN 'destination'::text
                   WHEN access IN ('no', 'private') THEN 'no'::text
@@ -511,6 +514,18 @@ Layer:
       cache-features: true
       group-by: layernotnull
       minzoom: 10
+  - id: tunnels-access
+    geometry: linestring
+    <<: *extents
+    Datasource:
+      <<: *osm2pgsql
+      # This query is quite large, having to deal with both roads, railways. To
+      # allow for ways that are both railways and roads, a UNION ALL is present.
+      table: *tunnels-sql
+    properties:
+      cache-features: true
+      group-by: layernotnull
+      minzoom: 15
   - id: landuse-overlay
     geometry: polygon
     <<: *extents
@@ -600,7 +615,7 @@ Layer:
     <<: *extents
     Datasource:
       <<: *osm2pgsql
-      table: &turning-circle_sql |-
+      upstream-table: &turning-circle_sql |-
         (SELECT DISTINCT ON (p.way)
             p.way AS way,
             p.highway AS type,
@@ -632,6 +647,17 @@ Layer:
             AND p.way && !bbox! -- Both conditions are necessary for good index usage, even with the DWithin above
           ORDER BY p.way, v.prio
         ) AS turning_circle_sql
+      table-join-src: &turning-circle-table-join-src |-
+        (SELECT way FROM planet_osm_point WHERE highway IN ( 'turning_circle', 'turning_loop', 'mini_roundabout') ) AS "turning-circle-join-src"
+      table-join-dst: &turning-circle-table-join-dst |-
+        (SELECT prio, highway, service FROM planet_osm_line JOIN (VALUES ('trunk', 1), ('primary', 2), ('secondary', 3), ('tertiary', 4), ('unclassified', 5), ('residential', 6), ('living_street', 7), ('service', 8), ('track', 9) ) AS v (highway, prio) USING (highway) ORDER BY prio) AS "turning-circle-join-dst"
+      table-draw: &turning-circle-table-draw |-
+        (SELECT way,
+          "joined:highway" AS int_tc_type,
+          CASE WHEN "joined:service" IN ('parking_aisle', 'drive-through', 'driveway') THEN 'INT-minor' ELSE 'INT-normal' END AS int_tc_service
+          FROM planet_osm_point
+          WHERE "joined" = 'turning-circle-join'
+        ) AS "turning-circle-table-draw"
     properties:
       minzoom: 15
   - id: highway-area-casing
@@ -802,12 +828,24 @@ Layer:
     properties:
       cache-features: true
       minzoom: 10
+  - id: roads-fill-access
+    geometry: linestring
+    <<: *extents
+    Datasource:
+      <<: *osm2pgsql
+      table: *roads_sql
+    properties:
+      cache-features: true
+      minzoom: 15
   - id: turning-circle-fill
     geometry: point
     <<: *extents
     Datasource:
       <<: *osm2pgsql
-      table: *turning-circle_sql
+      upstream-table: *turning-circle_sql
+      table-join-src: *turning-circle-table-join-src
+      table-join-dst: *turning-circle-table-join-dst
+      table-draw: *turning-circle-table-draw
     properties:
       minzoom: 15
   - id: aerialways
@@ -860,6 +898,7 @@ Layer:
               WHEN surface IN ('paved', 'asphalt', 'cobblestone', 'cobblestone:flattened', 'sett', 'concrete', 'concrete:lanes',
                                   'concrete:plates', 'paving_stones', 'metal', 'wood', 'unhewn_cobblestone') THEN 'paved'
             END AS int_surface
+            , access, horse, bicycle
           FROM planet_osm_roads
           WHERE highway IS NOT NULL
             OR (railway IS NOT NULL AND railway != 'preserved'
@@ -899,7 +938,7 @@ Layer:
     <<: *extents
     Datasource:
       <<: *osm2pgsql
-      table: |-
+      table: &bridges-sql |-
         (SELECT
             way,
             (CASE WHEN feature IN ('highway_motorway_link', 'highway_trunk_link', 'highway_primary_link', 'highway_secondary_link', 'highway_tertiary_link') THEN substr(feature, '_link') ELSE feature END) AS feature,
@@ -954,7 +993,7 @@ Layer:
                 foot,
                 bicycle,
                 tracktype,
-                'null',
+                'null' AS int_surface,
                 CASE
                   WHEN access IN ('destination') THEN 'destination'::text
                   WHEN access IN ('no', 'private') THEN 'no'::text
@@ -980,6 +1019,16 @@ Layer:
       cache-features: true
       group-by: layernotnull
       minzoom: 10
+  - id: bridges-access
+    geometry: linestring
+    <<: *extents
+    Datasource:
+      <<: *osm2pgsql
+      table: *bridges-sql
+    properties:
+      cache-features: true
+      group-by: layernotnull
+      minzoom: 15
   - id: guideways
     geometry: linestring
     <<: *extents
@@ -1085,6 +1134,7 @@ Layer:
     properties:
       minzoom: 16
   - id: necountries
+    ignore: true
     geometry: linestring
     <<: *extents
     Datasource:
@@ -1113,7 +1163,7 @@ Layer:
           ORDER BY admin_level DESC
         ) AS admin_low_zoom
     properties:
-      minzoom: 4
+      minzoom: 1
       maxzoom: 7
   - id: admin-mid-zoom
     geometry: linestring
@@ -1243,10 +1293,11 @@ Layer:
       # results for most countries.
       table: |-
         (SELECT
-            (SELECT ST_Transform(ST_PointOnSurface(geom),3857)
-              FROM ST_Dump(ST_Transform(way,4326))
-              ORDER BY ST_Area(geom::geography) DESC
-              LIMIT 1) AS way,
+            -- (SELECT ST_Transform(ST_PointOnSurface(geom),3857)
+            --   FROM ST_Dump(ST_Transform(way,4326))
+            --   ORDER BY ST_Area(geom::geography) DESC
+            --   LIMIT 1) AS way,
+            ST_PointOnSurface(way) AS way,
             way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels,
             name
           FROM planet_osm_polygon
@@ -1525,25 +1576,25 @@ Layer:
               way,
               CASE
                 WHEN amenity = 'parcel_locker'
-                THEN CONCAT_WS(E'\n', COALESCE("brand", "operator", name), ref)
-                ELSE
-                CONCAT(
-                  name,
-                  E'\n' || CONCAT( -- by doing this with a || if both the ele and height branches are null, this entire expression is null and only name is used
-                    CASE
-                      WHEN "ele" IS NOT NULL AND "ele" ~ '^-?\d{1,4}(\.\d+)?$'
-                        AND ("natural" IN ('peak', 'volcano', 'saddle')
-                          OR (tourism = 'information' AND "information" = 'guidepost')
-                          OR tourism IN ('alpine_hut', 'wilderness_hut')
-                          OR (amenity = 'shelter' AND "shelter_type" NOT IN ('public_transport', 'picnic_shelter'))
-                          OR "mountain_pass" = 'yes')
-                      THEN CONCAT(REPLACE(ROUND(("ele")::NUMERIC)::TEXT, '-', U&'\2212'), U&'\00A0', 'm') END,
-                    CASE
-                      WHEN "height" IS NOT NULL AND "height" ~ '^\d{1,3}(\.\d+)?$'
-                        AND waterway = 'waterfall'
-                      THEN CONCAT(ROUND(("height")::NUMERIC)::TEXT, U&'\00A0', 'm') END
-                    )
-                  )
+                THEN name -- CONCAT_WS(E'\n', COALESCE("brand", "operator", name), ref)
+                ELSE name
+                -- CONCAT(
+                --   name,
+                --   E'\n' || CONCAT( -- by doing this with a || if both the ele and height branches are null, this entire expression is null and only name is used
+                --     CASE
+                --       WHEN "ele" IS NOT NULL AND "ele" ~ '^-?\d{1,4}(\.\d+)?$'
+                --         AND ("natural" IN ('peak', 'volcano', 'saddle')
+                --           OR (tourism = 'information' AND "information" = 'guidepost')
+                --           OR tourism IN ('alpine_hut', 'wilderness_hut')
+                --           OR (amenity = 'shelter' AND "shelter_type" NOT IN ('public_transport', 'picnic_shelter'))
+                --           OR "mountain_pass" = 'yes')
+                --       THEN CONCAT(REPLACE(ROUND(("ele")::NUMERIC)::TEXT, '-', U&'\2212'), U&'\00A0', 'm') END,
+                --     CASE
+                --       WHEN "height" IS NOT NULL AND "height" ~ '^\d{1,3}(\.\d+)?$'
+                --         AND waterway = 'waterfall'
+                --       THEN CONCAT(ROUND(("height")::NUMERIC)::TEXT, U&'\00A0', 'm') END
+                --     )
+                --   )
                 END AS name,
               "parking" as "parking",
               COALESCE(
@@ -1612,26 +1663,28 @@ Layer:
                 'golf_' || CASE WHEN "golf" IN ('pin') THEN "golf" END
               ) AS feature,
               CASE WHEN access IN ('private', 'no', 'customers', 'permit', 'delivery') THEN 'restricted' ELSE 'yes' END AS int_access,
-              CASE
-                WHEN "natural" IN ('peak', 'volcano', 'saddle') 
-                     OR "mountain_pass" = 'yes' THEN
-                  CASE
-                    WHEN "ele" ~ '^-?\d{1,4}(\.\d+)?$' THEN ("ele")::NUMERIC
-                  END
-                WHEN "waterway" IN ('waterfall') THEN
-                  CASE
-                    WHEN "height" ~ '^\d{1,3}(\.\d+)?( m)?$' THEN (SUBSTRING("height", '^(\d{1,3}(\.\d+)?)( m)?$'))::NUMERIC
-                  END
-              END AS score,
+              -- CASE
+              --   WHEN "natural" IN ('peak', 'volcano', 'saddle') 
+              --        OR "mountain_pass" = 'yes' THEN
+              --     CASE
+              --       WHEN "ele" ~ '^-?\d{1,4}(\.\d+)?$' THEN ("ele")::NUMERIC
+              --     END
+              --   WHEN "waterway" IN ('waterfall') THEN
+              --     CASE
+              --       WHEN "height" ~ '^\d{1,3}(\.\d+)?( m)?$' THEN (SUBSTRING("height", '^(\d{1,3}(\.\d+)?)( m)?$'))::NUMERIC
+              --     END
+              -- END AS score,
+              0 AS score,
               religion,
               "denomination" as denomination,
               "generator:source" as "generator:source",
               CASE
                 WHEN (man_made IN ('mast', 'tower', 'chimney', 'crane') AND ("location" NOT IN ('roof', 'rooftop') OR ("location") IS NULL))
                       OR waterway IN ('waterfall') THEN
-                  CASE
-                    WHEN "height" ~ '^\d{1,3}(\.\d+)?( m)?$' THEN (SUBSTRING("height", '^(\d{1,3}(\.\d+)?)( m)?$'))::NUMERIC
-                  END
+                  -- CASE
+                  --   WHEN "height" ~ '^\d{1,3}(\.\d+)?( m)?$' THEN (SUBSTRING("height", '^(\d{1,3}(\.\d+)?)( m)?$'))::NUMERIC
+                  -- END
+                  height
               END AS height,
               "location" as location,
               "icao" as icao,
@@ -1643,9 +1696,10 @@ Layer:
               "telescope:type" as "telescope:type",
               CASE
                 WHEN man_made IN ('telescope') THEN
-                  CASE
-                    WHEN "telescope:diameter" ~ '^-?\d{1,4}(\.\d+)?$' THEN ("telescope:diameter")::NUMERIC
-                  END
+                  -- CASE
+                  --   WHEN "telescope:diameter" ~ '^-?\d{1,4}(\.\d+)?$' THEN ("telescope:diameter")::NUMERIC
+                  -- END
+                  "telescope:diameter"
               END AS "telescope:diameter",
               "castle_type" as castle_type,
               "sport" as sport,
@@ -1693,7 +1747,9 @@ Layer:
                   shop,
                   tourism,
                   waterway,
-                  way_area
+                  way_area,
+                  diplomatic, golf, mountain_pass, 
+                  information, parking, vending, advertising, emergency, location, ford, protect_class, office, denomination, "generator:source", recycling_type, "tower:construction", "tower:type", "telescope:type", castle_type, sport, memorial, artwork_type, icao, iata, operator, ele, height, "telescope:diameter"
                 FROM planet_osm_polygon
                 WHERE way && !bbox! -- Not ST_PointOnSurface(way) because name might be NULL
                   AND way_area < 768000*POW(!scale_denominator!*0.001*0.28,2)
@@ -1721,7 +1777,9 @@ Layer:
                   shop,
                   tourism,
                   waterway,
-                  NULL::real AS way_area
+                  NULL::real AS way_area,
+                  diplomatic, golf, mountain_pass, 
+                  information, parking, vending, advertising, emergency, location, ford, protect_class, office, denomination, "generator:source", recycling_type, "tower:construction", "tower:type", "telescope:type", castle_type, sport, memorial, artwork_type, icao, iata, operator, ele, height, "telescope:diameter"
                 FROM planet_osm_point
                 WHERE way && !bbox!
               ) _
@@ -2051,6 +2109,8 @@ Layer:
             ) AS feature,
             name,
             CASE WHEN building = 'no' OR building IS NULL THEN 'no' ELSE 'yes' END AS is_building -- always no with the where conditions
+            , information, 0 AS height, NULL::text AS "generator:source", NULL::text AS location, NULL::text AS "telescope:type", NULL::text AS memorial, NULL::text AS sport
+            , NULL::text AS shop, NULL::text AS vending, NULL::text AS recycling_type, NULL::text AS int_access, NULL::text AS icao, NULL::text AS iata, NULL::text AS parking
           FROM planet_osm_polygon
           WHERE ST_PointOnSurface(way) && !bbox!
             AND name IS NOT NULL
@@ -2227,7 +2287,7 @@ Layer:
       <<: *osm2pgsql
       table: |-
         (SELECT
-            way,
+            ST_PointOnSurface(way) AS way, -- TODO: Text könnte mit ST_PointOnSurface() anders aussehen, als ohne
             name,
             admin_level,
             way_area/NULLIF(POW(!scale_denominator!*0.001*0.28,2),0) AS way_pixels
@@ -2248,7 +2308,7 @@ Layer:
       <<: *osm2pgsql
       table: |-
         (SELECT
-            way,
+            ST_PointOnSurface(way) AS way, -- TODO: Text könnte mit ST_PointOnSurface() anders aussehen, als ohne
             name,
             boundary,
             "protect_class" AS protect_class,
