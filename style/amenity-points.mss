@@ -3081,7 +3081,7 @@
   }
 }
 
-#trees-1 [zoom >= 16] {
+#trees [zoom >= 16] {
   ::canopy {
     opacity: 0.6;
     [natural = 'tree'] {
@@ -3108,6 +3108,23 @@
         marker-height: 30;
       }
     }
+    [natural = 'tree_row'] {
+      line-color: darken(@forest,10%);
+      line-cap: round;
+      line-width: 2.5;
+      [zoom >= 17] {
+        line-width: 5;
+      }
+      [zoom >= 18] {
+        line-width: 10;
+      }
+      [zoom >= 19] {
+        line-width: 15;
+      }
+      [zoom >= 20] {
+        line-width: 30;
+      }
+    }
   }
   [natural = 'tree']::trunk {
     [zoom >= 18] {
@@ -3126,29 +3143,6 @@
     [zoom >= 20] {
       trunk/marker-width: 6;
       trunk/marker-height: 6;
-    }
-  }
-}
-
-#trees-2 [zoom >= 16] {
-  ::canopy {
-    opacity: 0.6;
-    [natural = 'tree_row'] {
-      line-color: darken(@forest,10%);
-      line-cap: round;
-      line-width: 2.5;
-      [zoom >= 17] {
-        line-width: 5;
-      }
-      [zoom >= 18] {
-        line-width: 10;
-      }
-      [zoom >= 19] {
-        line-width: 15;
-      }
-      [zoom >= 20] {
-        line-width: 30;
-      }
     }
   }
 }
