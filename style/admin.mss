@@ -302,10 +302,10 @@ Then all three layers are added to the rendering with comp-op: darken, so that t
       thin/line-dasharray: 16,4,3,4,3,4;
     }
   }
+  /*
   ::firstline { opacity: 0.5; }
   ::wideline { opacity: 0.5; }
   ::narrowline { opacity: 0.6; }
-  /*
   The following code prevents admin boundaries from being rendered on top of
   each other. Comp-op works on the entire attachment, not on the individual
   border. Therefore, this code generates an attachment containing a set of
@@ -315,10 +315,10 @@ Then all three layers are added to the rendering with comp-op: darken, so that t
   darker than @admin-boundaries).
   The SQL has `ORDER BY admin_level`, so the boundary with the lowest
   admin_level is rendered on top, and therefore the only visible boundary.
-  */
   ::firstline,
   ::wideline,
   ::narrowline { comp-op: darken; }
+  */
 
   [admin_level = '5'][zoom >= 8]::firstline {
     background/line-join: bevel;
