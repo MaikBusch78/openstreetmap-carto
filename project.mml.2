@@ -610,6 +610,15 @@ Layer:
         ) AS ferry_routes
     properties:
       minzoom: 8
+  - id: turning-circle-join-src
+    geometry: point
+    <<: *extents
+    Datasource:
+      <<: *osm2pgsql
+      table: &turning-circle-table-join-src |-
+        (SELECT way FROM planet_osm_point WHERE highway IN ( 'turning_circle', 'turning_loop', 'mini_roundabout') ) AS "turning-circle-join-src"
+    properties:
+      minzoom: 15
   - id: turning-circle-casing
     geometry: point
     <<: *extents
@@ -647,8 +656,7 @@ Layer:
             AND p.way && !bbox! -- Both conditions are necessary for good index usage, even with the DWithin above
           ORDER BY p.way, v.prio
         ) AS turning_circle_sql
-      table-join-src: &turning-circle-table-join-src |-
-        (SELECT way FROM planet_osm_point WHERE highway IN ( 'turning_circle', 'turning_loop', 'mini_roundabout') ) AS "turning-circle-join-src"
+      table-join-src: *turning-circle-table-join-src
       table-join-dst: &turning-circle-table-join-dst |-
         (SELECT prio, highway, service FROM planet_osm_line JOIN (VALUES ('trunk', 1), ('primary', 2), ('secondary', 3), ('tertiary', 4), ('unclassified', 5), ('residential', 6), ('living_street', 7), ('service', 8), ('track', 9) ) AS v (highway, prio) USING (highway) ORDER BY prio) AS "turning-circle-join-dst"
       table-draw: &turning-circle-table-draw |-

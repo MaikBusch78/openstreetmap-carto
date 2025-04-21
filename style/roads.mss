@@ -2779,6 +2779,13 @@ tertiary is rendered from z10 and is not included in osm_planet_roads. */
   }
 }
 
+#turning-circle-join-src {
+  marker-fill: @trunk-casing;
+  marker-width: 0.1;
+  marker-height: 0.1;
+  marker-opacity: 0.0;
+}
+
 #turning-circle-casing {
   [int_tc_type = 'trunk'][zoom >= 15] {
     marker-fill: @trunk-casing;
