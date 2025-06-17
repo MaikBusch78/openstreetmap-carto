@@ -65,7 +65,6 @@ Layer:
       table: |-
         (SELECT
             way, way_pixels,
-            NULL::text AS is_building,
             COALESCE(wetland, landuse, "natural") AS feature
           FROM (SELECT
               way,
@@ -906,7 +905,6 @@ Layer:
               WHEN surface IN ('paved', 'asphalt', 'cobblestone', 'cobblestone:flattened', 'sett', 'concrete', 'concrete:lanes',
                                   'concrete:plates', 'paving_stones', 'metal', 'wood', 'unhewn_cobblestone') THEN 'paved'
             END AS int_surface
-            , access, horse, bicycle
           FROM planet_osm_roads
           WHERE highway IS NOT NULL
             OR (railway IS NOT NULL AND railway != 'preserved'
@@ -2117,8 +2115,6 @@ Layer:
             ) AS feature,
             name,
             CASE WHEN building = 'no' OR building IS NULL THEN 'no' ELSE 'yes' END AS is_building -- always no with the where conditions
-            , information, 0 AS height, NULL::text AS "generator:source", NULL::text AS location, NULL::text AS "telescope:type", NULL::text AS memorial, NULL::text AS sport
-            , NULL::text AS shop, NULL::text AS vending, NULL::text AS recycling_type, NULL::text AS int_access, NULL::text AS icao, NULL::text AS iata, NULL::text AS parking
           FROM planet_osm_polygon
           WHERE ST_PointOnSurface(way) && !bbox!
             AND name IS NOT NULL
